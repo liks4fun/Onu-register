@@ -26,6 +26,9 @@ namespace c320_onu_reg
         [DataMember]
         private int firmwareVer;
 
+        [DataMember]
+        public int MngVid { get; set; }
+
         //Вот тут 1 для v1 прошивки и 2 для v2
         public int FirmwareVer
         {
@@ -48,7 +51,7 @@ namespace c320_onu_reg
         public TelnetConnection telnet;
 
         //Конструктор с минимумом необходимой инфы
-        public Commutator(string Name, string Ip, string Login, string Password, string LineProfileName, string RemoteProfileName, int FirmwareVer)
+        public Commutator(string Name, string Ip, string Login, string Password, string LineProfileName, string RemoteProfileName, int FirmwareVer, int mngvid)
         {
             this.Name = Name;
             this.Ip = Ip;
@@ -57,6 +60,7 @@ namespace c320_onu_reg
             this.LineProfileName = LineProfileName;
             this.RemoteProfileName = RemoteProfileName;
             this.FirmwareVer = FirmwareVer;
+            this.MngVid = mngvid;
         }
 
         //Подключаемся и авторизуемся
@@ -84,10 +88,16 @@ namespace c320_onu_reg
                 //Парсим вывод
                 string[] parsedOutput = output.Split(new char[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
                 //Выяснилось опытным путём, лучше поверить на слово
-                Sn = parsedOutput[8];
+                if (firmwareVer == 1)
+                    Sn = parsedOutput[8];
+                else if (firmwareVer == 2)
+                    Sn = parsedOutput[5];
                 Console.WriteLine($"Here unconfigured ONU sn: {Sn}");
                 //Парсим второй раз, чтобы заполнить номера важные
-                parsedOutput = parsedOutput[7].Split(new char[] { '/', '_', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                if (firmwareVer == 1)
+                    parsedOutput = parsedOutput[7].Split(new char[] { '/', '_', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                else if (firmwareVer == 2)
+                    parsedOutput = parsedOutput[4].Split(new char[] { '/', '_', ':' }, StringSplitOptions.RemoveEmptyEntries);
                 OltNum = Int32.Parse(parsedOutput[1]);
                 ShelfNum = Int32.Parse(parsedOutput[2]);
                 OnuIfNum = Int32.Parse(parsedOutput[3]);
@@ -130,6 +140,13 @@ namespace c320_onu_reg
 
                 }
 
+                if (onuIdList[0] == 2)
+                {
+                    freeOnuIdList.Add(onuIdList[0] - 1);
+                    freeSlotFlag = true;
+                    break;
+
+                }
                 // записываем в лист свободных слотов свободные слоты согласно разницы
                 if (temp > 1)
                 {
@@ -173,33 +190,29 @@ namespace c320_onu_reg
             telnet.WriteLine($"onu {OnuId} type F601 sn {Sn}");
             telnet.WriteLine($"onu {OnuId} profile line {LineProfileName} remote {RemoteProfileName}");
             telnet.WriteLine("exit");
-            Console.WriteLine(telnet.Read());
             telnet.WriteLine($"interface gpon-onu_{OltNum}/{ShelfNum}/{OnuIfNum}:{OnuId}");
-            Console.WriteLine(telnet.Read());
             //В зависимости от версии прошивки регаем ону
             if (FirmwareVer == 1)
             {
                 telnet.WriteLine("switchport mode hybrid vport 1");
-                Console.WriteLine(telnet.Read());
-                telnet.WriteLine($"switchport vlan 110,{RemoteProfileName}  tag vport 1");
-                Console.WriteLine(telnet.Read());
+                telnet.WriteLine($"switchport vlan {MngVid},{RemoteProfileName}  tag vport 1");
                 telnet.WriteLine("port-location format flexible-syntax vport 1");
                 telnet.WriteLine($"description {onuDescr}");
                 telnet.WriteLine($"name {onuDescr}");
                 Console.WriteLine("We did it!");
                 telnet.WriteLine("exit");
                 telnet.WriteLine("exit");
-                Console.WriteLine($"show running-config interface gpon-onu_{OltNum}/{ShelfNum}/{OnuIfNum}:{OnuId}");
+                telnet.WriteLine("write");
                 telnet.WriteLine("exit");
             } else if (FirmwareVer == 2)
             {
-                telnet.WriteLine($"service-port 3 vport 1 user-vlan {RemoteProfileName} vlan {RemoteProfileName}");
+                telnet.WriteLine($"service-port {OnuId} vport 1 user-vlan {RemoteProfileName} vlan {RemoteProfileName}");
                 telnet.WriteLine($"description {onuDescr}");
                 telnet.WriteLine($"name {onuDescr}");
                 Console.WriteLine("We did it!");
                 telnet.WriteLine("exit");
                 telnet.WriteLine("exit");
-                Console.WriteLine($"show running-config interface gpon-onu_{OltNum}/{ShelfNum}/{OnuIfNum}:{OnuId}");
+                telnet.WriteLine("write");
                 telnet.WriteLine("exit");
             }
         }
