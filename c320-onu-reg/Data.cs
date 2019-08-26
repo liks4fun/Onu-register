@@ -33,22 +33,24 @@ namespace c320_onu_reg
         //Добавляем новый коммутатор
         public void AddCommutator()
         {
-            Console.WriteLine("Сейчас мы добавим сюда новый коммутатор, заполни необходимую инфу");
-            Console.Write("Имя: ");
+            Console.WriteLine("Now we add new device, please fill required fields");
+            Console.Write("Device name: ");
             string name = Console.ReadLine();
-            Console.Write("\nЛогин: ");
+            Console.Write("\nLogin: ");
             string login = Console.ReadLine();
-            Console.Write("\nПароль: ");
+            Console.Write("\nPassword: ");
             string password = Console.ReadLine();
             Console.Write("\nIP: ");
             string ip = Console.ReadLine();
-            Console.Write("\nИмя профиля line: ");
+            Console.Write("\nLine profile name: ");
             string lineProfileName = Console.ReadLine();
-            Console.Write("\nИмя профиля remote: ");
+            Console.Write("\nRemote profile name: ");
             string remoteProfileName = Console.ReadLine();
-            Console.Write("\nУкажи 1 для версии прошивки 1+ или 2 для версии 2+: ");
-            int type = Int32.Parse(Console.ReadKey().KeyChar.ToString());
-            Commutator commutator = new Commutator(name,ip,login,password,lineProfileName,remoteProfileName, type);
+            Console.Write("\nManagement vlan id: ");
+            int mngvid = Int32.Parse(Console.ReadLine());
+            Console.WriteLine("\nPick 1 or 2 for your firmware ver.: ");
+            int firmwareVer = Int32.Parse(Console.ReadKey(false).KeyChar.ToString());
+            Commutator commutator = new Commutator(name,ip,login,password,lineProfileName,remoteProfileName, firmwareVer, mngvid);
 
             //добавляем в список
             Commutators.Add(commutator);
