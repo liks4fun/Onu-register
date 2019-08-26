@@ -14,6 +14,7 @@ namespace c320_onu_reg
         public string Name { get; set; }
         [DataMember]
         public string Ip { get; set; }
+        [DataMember]
         public string Login { get; set; }
         [DataMember]
         public string Password { get; set; }
@@ -172,12 +173,16 @@ namespace c320_onu_reg
             telnet.WriteLine($"onu {OnuId} type F601 sn {Sn}");
             telnet.WriteLine($"onu {OnuId} profile line {LineProfileName} remote {RemoteProfileName}");
             telnet.WriteLine("exit");
-            telnet.WriteLine($"gpon-onu_{OltNum}/{ShelfNum}/{OnuIfNum}:{OnuId}");
+            Console.WriteLine(telnet.Read());
+            telnet.WriteLine($"interface gpon-onu_{OltNum}/{ShelfNum}/{OnuIfNum}:{OnuId}");
+            Console.WriteLine(telnet.Read());
             //В зависимости от версии прошивки регаем ону
             if (FirmwareVer == 1)
             {
                 telnet.WriteLine("switchport mode hybrid vport 1");
+                Console.WriteLine(telnet.Read());
                 telnet.WriteLine($"switchport vlan 110,{RemoteProfileName}  tag vport 1");
+                Console.WriteLine(telnet.Read());
                 telnet.WriteLine("port-location format flexible-syntax vport 1");
                 telnet.WriteLine($"description {onuDescr}");
                 telnet.WriteLine($"name {onuDescr}");
