@@ -23,10 +23,7 @@ namespace c320_onu_reg
 
                 //Перебираем список и выводим пользователю
                 Console.WriteLine("List:");
-                for (int i = 0; i < Commutators.Count; i++)
-                {
-                    Console.WriteLine($"{i}) {Commutators[i].Name}");
-                }
+                Commutators.ForEach(c => Console.WriteLine($"{Commutators.IndexOf(c)}) {c.Name}"));
 
                 //Получаем ввод от юзера
                 Console.Write("Input: ");
@@ -34,47 +31,41 @@ namespace c320_onu_reg
                 Console.WriteLine("");
 
                 //На основании ввода решаем что делать
-                if (key.KeyChar == 'q')
-                    break;
-                else if (key.KeyChar == 'n')
+                switch(key.KeyChar) 
                 {
-                    try
-                    {
-                        data.AddCommutator();
-                    } catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        continue;
-                    }
-                }
-                else
-                {
-                    int commutatorNum;
-                    try
-                    {
-                        commutatorNum = Int32.Parse(key.KeyChar.ToString());
-                    }
-                    catch
-                    {
-                        Console.WriteLine("Wrong input! Only commutator number/q/n allowed.");
-                        continue;
-                    }
-                    commutators = data.GetCommutators();
-                    if (commutatorNum > commutators.Count - 1)
-                    {
-                        Console.WriteLine("Type right commutator number!");
-                        continue;
-                    }
-                    Commutators[commutatorNum].Auth();
-                    try
-                    {
-                        Commutators[commutatorNum].GetUncfgOnu();
-                    } catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        continue;
-                    }
-                    Commutators[commutatorNum].RegOnu();
+                    case 'q':
+                        Environment.Exit(0);
+                        break;
+                    case 'n':
+                        try
+                        {
+                            data.AddCommutator();
+                        } 
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                        break;
+                    default:
+                        try
+                        {
+                            int commutatorNum = Int32.Parse(key.KeyChar.ToString());
+                            commutators = data.GetCommutators();
+                            if (commutatorNum > commutators.Count - 1)
+                            {
+                                Console.WriteLine("Type right commutator number!");
+                                break;
+                            }
+                            Commutators[commutatorNum].Auth();
+                            Commutators[commutatorNum].GetUncfgOnu();
+                            Commutators[commutatorNum].RegOnu();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            continue;
+                        }
+                        break;
                 }
             } while (true);
         }

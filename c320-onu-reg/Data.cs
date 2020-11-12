@@ -10,17 +10,18 @@ namespace c320_onu_reg
     class Data
     {
         //Список с коммутаторами
+        private readonly string _dataPath;
         private List<Commutator> Commutators { get; set; }
 
         public Data()
         {
             Commutators = new List<Commutator>();
             DataContractJsonSerializer jsonFormatter = new DataContractJsonSerializer(typeof(List<Commutator>));
-            using (FileStream fs = new FileStream("data.json", FileMode.OpenOrCreate))
+            _dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data.json");
+            System.Console.WriteLine(_dataPath);
+            using (FileStream fs = new FileStream(_dataPath, FileMode.OpenOrCreate))
             {
-                fs.Position = 0;
-                FileInfo file = new FileInfo("data.json");
-                if (file.Length != 0)
+                if (fs.Length != 0)
                     Commutators = (List<Commutator>)jsonFormatter.ReadObject(fs);
             }
         }
@@ -56,7 +57,7 @@ namespace c320_onu_reg
             Commutators.Add(commutator);
             //Сохраняем в файл
             DataContractJsonSerializer jsonFormatter = new DataContractJsonSerializer(typeof(List<Commutator>));
-            using (FileStream fs = new FileStream("data.json", FileMode.OpenOrCreate))
+            using (FileStream fs = new FileStream(_dataPath, FileMode.Open))
             {
                 jsonFormatter.WriteObject(fs, Commutators);
             }
